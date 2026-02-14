@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Calendar, User, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, ArrowRight } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface BlogPost {
   id: string;
@@ -9,94 +10,59 @@ interface BlogPost {
   author: string;
   date: string;
   category: string;
-  readTime: string;
+  read_time: string;
   image: string;
   tags: string[];
 }
 
-const blogPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'Guide complet : Configuration FortiGate pour PME',
-    excerpt: 'Apprenez à configurer une infrastructure de sécurité robuste avec FortiGate. Un tutoriel complet pour débuter.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '15 Jan 2024',
-    category: 'Sécurité',
-    readTime: '8 min',
-    image: 'https://images.pexels.com/photos/2881229/pexels-photo-2881229.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['FortiGate', 'Sécurité', 'Réseau']
-  },
-  {
-    id: '2',
-    title: 'Cybersécurité : Les 5 erreurs à éviter en 2024',
-    excerpt: 'Découvrez les pièges courants de la cybersécurité et comment les éviter pour protéger votre infrastructure.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '12 Jan 2024',
-    category: 'Cybersécurité',
-    readTime: '6 min',
-    image: 'https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['Cybersécurité', 'Bonnes Pratiques']
-  },
-  {
-    id: '3',
-    title: 'Assembly x86 : Les bases pour débuter',
-    excerpt: 'Une introduction complète à la programmation en assembly x86. Concepts fondamentaux et premiers pas.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '8 Jan 2024',
-    category: 'Développement',
-    readTime: '10 min',
-    image: 'https://images.pexels.com/photos/270373/pexels-photo-270373.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['Assembly', 'x86', 'Programmation']
-  },
-  {
-    id: '4',
-    title: 'VMware ESXi : Déployer une infrastructure virtualisée',
-    excerpt: 'Guide pratique pour mettre en place une infrastructure virtualisée avec VMware ESXi et vSphere.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '5 Jan 2024',
-    category: 'Infrastructure',
-    readTime: '7 min',
-    image: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['VMware', 'Virtualisation', 'Infrastructure']
-  },
-  {
-    id: '5',
-    title: 'Réseau d\'entreprise : Architecture et segmentation',
-    excerpt: 'Concevoir une architecture réseau d\'entreprise sécurisée. Segmentation VLAN et bonnes pratiques.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '2 Jan 2024',
-    category: 'Réseaux',
-    readTime: '9 min',
-    image: 'https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['Réseaux', 'Architecture', 'VLAN']
-  },
-  {
-    id: '6',
-    title: 'CTF Bandit : Solutions et explications détaillées',
-    excerpt: 'Résolutions complètes des challenges Bandit avec explications pour améliorer vos compétences en cybersécurité.',
-    content: 'Contenu complet de l\'article...',
-    author: 'Jonathan Mengoula',
-    date: '28 Dec 2023',
-    category: 'Cybersécurité',
-    readTime: '12 min',
-    image: 'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=800',
-    tags: ['CTF', 'Cybersécurité', 'OverTheWire']
-  }
-];
+interface BlogProps {
+  onArticleSelect?: (articleId: string) => void;
+}
 
 const categories = ['Tous', 'Sécurité', 'Cybersécurité', 'Développement', 'Infrastructure', 'Réseaux'];
 
-export default function Blog() {
+export default function Blog({ onArticleSelect }: BlogProps) {
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('Tous');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const { data, error } = await supabase
+        .from('blog_articles')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (data) {
+        setBlogPosts(data);
+      }
+      setLoading(false);
+    };
+
+    fetchPosts();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   const filteredPosts = selectedCategory === 'Tous'
     ? blogPosts
     : blogPosts.filter(post => post.category === selectedCategory);
+
+  if (loading) {
+    return (
+      <section id="blog" className="py-20 bg-gray-900">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-gray-400">Chargement des articles...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="blog" className="py-20 bg-gray-900">
@@ -128,7 +94,8 @@ export default function Blog() {
           {filteredPosts.map((post) => (
             <article
               key={post.id}
-              className="bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group flex flex-col"
+              className="bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group flex flex-col cursor-pointer"
+              onClick={() => onArticleSelect?.(post.id)}
             >
               <div className="relative h-48 overflow-hidden">
                 <img
@@ -166,9 +133,9 @@ export default function Blog() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1">
                       <Calendar size={16} />
-                      <span>{post.date}</span>
+                      <span>{formatDate(post.date)}</span>
                     </div>
-                    <span>{post.readTime}</span>
+                    <span>{post.read_time}</span>
                   </div>
                 </div>
 

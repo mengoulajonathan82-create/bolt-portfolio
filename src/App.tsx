@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Projects from './components/Projects';
@@ -7,15 +8,31 @@ import Gallery from './components/Gallery';
 import About from './components/About';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import ArticleDetail from './components/ArticleDetail';
 
 function App() {
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+
+  if (selectedArticleId) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Header />
+        <ArticleDetail
+          articleId={selectedArticleId}
+          onBack={() => setSelectedArticleId(null)}
+        />
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
       <Hero />
       <Projects />
       <Skills />
-      <Blog />
+      <Blog onArticleSelect={setSelectedArticleId} />
       <Gallery />
       <About />
       <Contact />
