@@ -21,7 +21,7 @@ export default function Hero() {
       <div className="container mx-auto px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 animate-fade-in">
-            <div className="w-64 h-64 mx-auto mb-6 rounded-lg bg-gradient-to-r from-emerald-400 to-blue-500 p-1 hover:scale-105 transition-transform duration-300 cursor-pointer group shadow-2xl">
+            <div className="w-96 h-96 mx-auto mb-6 rounded-lg bg-gradient-to-r from-emerald-400 to-blue-500 p-1 hover:scale-105 transition-transform duration-300 cursor-pointer group shadow-2xl">
               <img
                 src="https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=500"
                 alt="Profile Photo"
