@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Play } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import CommentForm from './CommentForm';
+import CommentsList from './CommentsList';
 
 interface Article {
   id: string;
@@ -12,6 +14,7 @@ interface Article {
   category: string;
   read_time: string;
   image: string;
+  video_url: string | null;
   tags: string[];
 }
 
@@ -23,6 +26,7 @@ interface ArticleDetailProps {
 export default function ArticleDetail({ articleId, onBack }: ArticleDetailProps) {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [commentRefresh, setCommentRefresh] = useState(0);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -67,6 +71,18 @@ export default function ArticleDetail({ articleId, onBack }: ArticleDetailProps)
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const extractYoutubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? match[2] : null;
+  };
+
+  const extractVimeoId = (url: string) => {
+    const regExp = /(?:vimeo\.com\/)?(\d+)/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
   };
 
   const renderMarkdown = (markdown: string) => {
@@ -147,6 +163,38 @@ export default function ArticleDetail({ articleId, onBack }: ArticleDetailProps)
               alt={article.title}
               className="w-full h-96 object-cover rounded-lg mb-8"
             />
+
+            {article.video_url && (
+              <div className="mb-8">
+                <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+                  {article.video_url.includes('youtube') || article.video_url.includes('youtu.be') ? (
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full"
+                      src={`https://www.youtube.com/embed/${extractYoutubeId(article.video_url)}`}
+                      title={article.title}
+                      allowFullScreen
+                    />
+                  ) : article.video_url.includes('vimeo') ? (
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full"
+                      src={`https://player.vimeo.com/video/${extractVimeoId(article.video_url)}`}
+                      title={article.title}
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      className="absolute top-0 left-0 w-full h-full"
+                      controls
+                      src={article.video_url}
+                    />
+                  )}
+                </div>
+                <p className="text-gray-400 text-sm mt-2 flex items-center space-x-1">
+                  <Play size={16} />
+                  <span>Vidéo complète sur ce sujet</span>
+                </p>
+              </div>
+            )}
             <div className="flex items-center space-x-4 text-gray-400 mb-6">
               <span className="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
                 {article.category}
@@ -187,6 +235,13 @@ export default function ArticleDetail({ articleId, onBack }: ArticleDetailProps)
               </div>
             </div>
           </div>
+
+          <CommentsList articleId={article.id} refreshTrigger={commentRefresh} />
+
+          <CommentForm
+            articleId={article.id}
+            onCommentAdded={() => setCommentRefresh(prev => prev + 1)}
+          />
         </article>
       </div>
     </section>
