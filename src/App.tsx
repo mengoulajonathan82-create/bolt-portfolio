@@ -30,11 +30,11 @@ function App() {
     <div className="min-h-screen bg-gray-900">
       <Header />
       <Hero />
+      <About />
       <Projects />
       <Skills />
       <Blog onArticleSelect={setSelectedArticleId} />
       <Gallery />
-      <About />
       <Contact />
       <Footer />
     </div>

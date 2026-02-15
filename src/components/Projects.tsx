@@ -1,60 +1,47 @@
+import { useState, useEffect } from 'react';
 import { ExternalLink, Github } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface Project {
+  id: string;
   title: string;
   description: string;
-  tags: string[];
-  github?: string;
-  demo?: string;
+  technologies: string[];
+  github_url?: string;
+  demo_url?: string;
   image: string;
 }
 
-const projects: Project[] = [
-  {
-    title: 'Configuration FortiGate',
-    description: 'Mise en place complète d\'une infrastructure réseau sécurisée avec FortiGate. Configuration de VPN, politiques de sécurité et monitoring.',
-    tags: ['Réseaux', 'Sécurité', 'FortiGate', 'VPN'],
-    github: 'https://github.com',
-    image: 'https://images.pexels.com/photos/2881229/pexels-photo-2881229.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    title: 'CTF Bandit - OverTheWire',
-    description: 'Résolution complète du challenge Bandit. Exploitation de vulnérabilités, scripting bash et analyse de sécurité.',
-    tags: ['CTF', 'Cybersécurité', 'Linux', 'Bash'],
-    github: 'https://github.com',
-    image: 'https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    title: 'Infrastructure VMware',
-    description: 'Déploiement et gestion d\'une infrastructure virtualisée complète avec VMware ESXi. Haute disponibilité et sauvegarde.',
-    tags: ['VMware', 'Virtualisation', 'Infrastructure'],
-    github: 'https://github.com',
-    image: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    title: 'Logos Associations Étudiantes',
-    description: 'Création de logos et d\'identités visuelles pour plusieurs associations étudiantes. Design moderne et professionnel.',
-    tags: ['Design', 'Branding', 'Graphisme'],
-    demo: 'https://example.com',
-    image: 'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    title: 'Réseau Campus',
-    description: 'Architecture et déploiement du réseau du campus. Configuration switches, routage inter-VLAN et sécurisation.',
-    tags: ['Réseaux', 'Cisco', 'VLAN', 'Routing'],
-    github: 'https://github.com',
-    image: 'https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    title: 'Assembly x86 Projects',
-    description: 'Projets de programmation bas niveau en assembly x86. Optimisation et reverse engineering.',
-    tags: ['Assembly', 'x86', 'Low-level', 'Reverse'],
-    github: 'https://github.com',
-    image: 'https://images.pexels.com/photos/270373/pexels-photo-270373.jpeg?auto=compress&cs=tinysrgb&w=800'
-  }
-];
-
 export default function Projects() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setProjects(data);
+      }
+      setLoading(false);
+    };
+
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="projects" className="py-20 bg-gray-800">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-gray-400">Chargement des projets...</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="projects" className="py-20 bg-gray-800">
       <div className="container mx-auto px-6">
@@ -66,9 +53,9 @@ export default function Projects() {
         </p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
+          {projects.map((project) => (
             <div
-              key={index}
+              key={project.id}
               className="bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 group"
             >
               <div className="relative h-48 overflow-hidden">
@@ -89,20 +76,20 @@ export default function Projects() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tags.map((tag, tagIndex) => (
+                  {project.technologies.map((tech, techIndex) => (
                     <span
-                      key={tagIndex}
+                      key={techIndex}
                       className="px-3 py-1 bg-gray-800 text-emerald-400 text-xs rounded-full"
                     >
-                      {tag}
+                      {tech}
                     </span>
                   ))}
                 </div>
 
                 <div className="flex space-x-4">
-                  {project.github && (
+                  {project.github_url && (
                     <a
-                      href={project.github}
+                      href={project.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 text-gray-400 hover:text-emerald-400 transition-colors"
@@ -111,9 +98,9 @@ export default function Projects() {
                       <span className="text-sm">Code</span>
                     </a>
                   )}
-                  {project.demo && (
+                  {project.demo_url && (
                     <a
-                      href={project.demo}
+                      href={project.demo_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 text-gray-400 hover:text-emerald-400 transition-colors"

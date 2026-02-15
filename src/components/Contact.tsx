@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Send, Mail, Phone, MapPin } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -13,11 +15,23 @@ export default function Contact() {
     e.preventDefault();
     setStatus('sending');
 
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.from('contacts').insert({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
+      if (error) throw error;
+
       setStatus('success');
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
       setTimeout(() => setStatus('idle'), 3000);
-    }, 1000);
+    } catch (error) {
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 3000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -118,6 +132,22 @@ export default function Contact() {
               </div>
 
               <div>
+                <label htmlFor="subject" className="block text-white font-semibold mb-2">
+                  Sujet
+                </label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                  placeholder="Sujet de votre message"
+                />
+              </div>
+
+              <div>
                 <label htmlFor="message" className="block text-white font-semibold mb-2">
                   Message
                 </label>
@@ -153,6 +183,12 @@ export default function Contact() {
               {status === 'success' && (
                 <p className="text-emerald-400 text-center">
                   Merci pour votre message ! Je vous répondrai dans les plus brefs délais.
+                </p>
+              )}
+
+              {status === 'error' && (
+                <p className="text-red-400 text-center">
+                  Une erreur s'est produite. Veuillez réessayer.
                 </p>
               )}
             </form>
